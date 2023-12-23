@@ -1,7 +1,7 @@
 use super::drunkard::DrunkardWalk;
 use super::MapArchitect;
 use crate::prelude::*;
-use bracket_lib::prelude::Rect;
+use bracket_geometry::prelude::Rect;
 
 const FORTRESS: (&str, i32, i32) = (
     "

@@ -13,7 +13,9 @@ mod prelude {
     pub use bevy::prelude::*;
     pub use bevy::window::PrimaryWindow;
     pub use bevy::winit::WinitSettings;
-    pub use bracket_lib::prelude::*;
+    pub use bracket_algorithm_traits::prelude::*;
+    pub use bracket_geometry::prelude::*;
+    pub use bracket_pathfinding::prelude::*;
     pub const SCREEN_WIDTH: i32 = 80;
     pub const SCREEN_HEIGHT: i32 = 80;
     pub const UI_HEIGHT: i32 = 10;
