@@ -1,15 +1,16 @@
-use crate::prelude::*;
 use super::popup;
-
+use crate::prelude::*;
 
 fn update_inventory_text(
     highlighted_item: Res<popup::HighlightedItem>,
     player_query: Query<Entity, With<Player>>,
     mut text_query: Query<&mut Text, (With<popup::InventoryText>, Without<popup::DescriptionText>)>,
-    mut description_query: Query<&mut Text, (With<popup::DescriptionText>, Without<popup::InventoryText>)>,
+    mut description_query: Query<
+        &mut Text,
+        (With<popup::DescriptionText>, Without<popup::InventoryText>),
+    >,
     items_query: Query<(Entity, &Naming, &Description, &Carried), Without<Weapon>>,
 ) {
-
     // get player entity, we will need it to filter out items carried by player
     let player_ent = player_query.single();
 
@@ -23,14 +24,13 @@ fn update_inventory_text(
         }
         text.sections[0].value = format!("You have no items.");
         description.sections[0].value = format!(" ");
-
     } else {
-        items_query.iter()
+        items_query
+            .iter()
             .filter(|(_, _, _, carried)| carried.0 == player_ent)
             .enumerate()
             .filter(|(index, _)| *index < popup::INVENTORY_SLOTS as usize)
-            .for_each(|(index, (_, item, desc, _))|
-            {
+            .for_each(|(index, (_, item, desc, _))| {
                 let mark;
                 if index as i32 == highlighted_item.0 {
                     mark = "-";
@@ -67,16 +67,19 @@ fn use_item(
     let player_ent = player_query.single();
 
     // get the item entity selected by the player
-    let item_entity = items_query.iter()
-            .filter(|(_, carried)| carried.0 == player_ent)
-            .enumerate()
-            .filter(|(item_count, (_,_))| *item_count as i32 == selected_item)
-            .find_map(|(_, (item_entity, _))| Some(item_entity));
+    let item_entity = items_query
+        .iter()
+        .filter(|(_, carried)| carried.0 == player_ent)
+        .enumerate()
+        .filter(|(item_count, (_, _))| *item_count as i32 == selected_item)
+        .find_map(|(_, (item_entity, _))| Some(item_entity));
 
     // if the item exists, send a message to activate it
-    if let Some(item_entity) = item_entity 
-    {
-        commands.spawn(ActivateItem{used_by: player_ent, item: item_entity});
+    if let Some(item_entity) = item_entity {
+        commands.spawn(ActivateItem {
+            used_by: player_ent,
+            item: item_entity,
+        });
         // set also highlighted item to 0, since previous item wont exist on list
         highlighted_item.0 = 0;
 
@@ -84,20 +87,16 @@ fn use_item(
         turn_state.set(TurnState::PlayerTurn);
         popup_state.set(PopUpState::None);
     }
-
 }
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app
-
-        // listening to user input on inventory screen
-        .add_systems(
-            Update,
-            (use_item, update_inventory_text)
-            .run_if(in_state(PopUpState::InventoryPopup))
-        );
-
+            // listening to user input on inventory screen
+            .add_systems(
+                Update,
+                (use_item, update_inventory_text).run_if(in_state(PopUpState::InventoryPopup)),
+            );
     }
 }

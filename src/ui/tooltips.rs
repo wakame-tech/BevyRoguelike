@@ -6,55 +6,57 @@ struct ToolTipText;
 #[derive(Component)]
 struct ToolTipBox;
 
-fn tooltip_ui(
-    mut commands: Commands,
-    font_manager: Res<FontManager>,
-) {
-    let game_log= GameLog::new();
+fn tooltip_ui(mut commands: Commands, font_manager: Res<FontManager>) {
+    let game_log = GameLog::new();
     commands.insert_resource(game_log);
 
     commands
-    // root node, just a black rectangle where the text will be
-    .spawn((NodeBundle {
-        // by default we set visible to false so it starts hidden
-        visibility: Visibility::Hidden,
-        style: Style {
-            width: Val::Px(200.0),
-            height: Val::Px(30.0),
-            position_type: PositionType::Absolute,
-            ..Default::default()
-        },
-        background_color: BackgroundColor(Color::rgb(0.0, 0.0, 0.0)),
-        ..Default::default()
-    }, ToolTipBox))
-    .with_children(|parent| {
-        // text
-        parent.spawn((TextBundle {
-            visibility: Visibility::Hidden,
-            style: Style {
-                height: Val::Px(20. * 1.),
-                margin: UiRect::all(Val::Auto),
+        // root node, just a black rectangle where the text will be
+        .spawn((
+            NodeBundle {
+                // by default we set visible to false so it starts hidden
+                visibility: Visibility::Hidden,
+                style: Style {
+                    width: Val::Px(200.0),
+                    height: Val::Px(30.0),
+                    position_type: PositionType::Absolute,
+                    ..Default::default()
+                },
+                background_color: BackgroundColor(Color::rgb(0.0, 0.0, 0.0)),
                 ..Default::default()
             },
-            text: Text::from_section(
-                "Goblin. HP: 2 / 2",
-                TextStyle {
-                    font: font_manager.font.clone(),
-                    font_size: 20.0,
-                    color: Color::WHITE,
+            ToolTipBox,
+        ))
+        .with_children(|parent| {
+            // text
+            parent.spawn((
+                TextBundle {
+                    visibility: Visibility::Hidden,
+                    style: Style {
+                        height: Val::Px(20. * 1.),
+                        margin: UiRect::all(Val::Auto),
+                        ..Default::default()
+                    },
+                    text: Text::from_section(
+                        "Goblin. HP: 2 / 2",
+                        TextStyle {
+                            font: font_manager.font.clone(),
+                            font_size: 20.0,
+                            color: Color::WHITE,
+                        },
+                    ),
+                    ..Default::default()
                 },
-            ),
-            ..Default::default()
-        }, ToolTipText));
-    });
+                ToolTipText,
+            ));
+        });
 }
-
 
 // when leaving user input state, hide tooltip
 fn hide_tooltip(
-    mut text_box_query : ParamSet<(
+    mut text_box_query: ParamSet<(
         Query<&mut Visibility, With<ToolTipText>>,
-        Query<&mut Visibility, With<ToolTipBox>>
+        Query<&mut Visibility, With<ToolTipBox>>,
     )>,
 ) {
     // update tooltip visibility
@@ -65,7 +67,7 @@ fn hide_tooltip(
     // update box visibility
     for mut visible in text_box_query.p1().iter_mut() {
         *visible = Visibility::Hidden;
-    } 
+    }
 }
 
 // when user left clicks, update tooltip and make it visible
@@ -79,9 +81,9 @@ fn update_tooltip(
     // query to get all the entities with Name component
     q_names: Query<(&Naming, &Position, Option<&Health>)>,
     // // query to get tooltip text and box
-    mut text_box_query : ParamSet<(
+    mut text_box_query: ParamSet<(
         Query<(&mut Text, &mut Visibility), With<ToolTipText>>,
-        Query<(&mut Style, &mut Visibility), With<ToolTipBox>>
+        Query<(&mut Style, &mut Visibility), With<ToolTipBox>>,
     )>,
     // query to get the player field of view
     player_fov_q: Query<&FieldOfView, With<Player>>,
@@ -93,7 +95,6 @@ fn update_tooltip(
 
         // check if the cursor is in the primary window
         if let Some(pos) = wnd.cursor_position() {
-
             // assuming there is exactly one main camera entity, so this is OK
             let (camera, camera_transform) = q_camera.single();
 
@@ -105,8 +106,13 @@ fn update_tooltip(
 
             // transform world coordinates to our grid
             let grid_x = (point_wld.x / tile_size_x) + (SCREEN_WIDTH / 2) as f32;
-            let grid_y = (point_wld.y / tile_size_y) + (SCREEN_HEIGHT / 2) as f32 - (UI_HEIGHT / 2) as f32;
-            let grid_position = Position{x: grid_x as i32, y: grid_y as i32, z:0};
+            let grid_y =
+                (point_wld.y / tile_size_y) + (SCREEN_HEIGHT / 2) as f32 - (UI_HEIGHT / 2) as f32;
+            let grid_position = Position {
+                x: grid_x as i32,
+                y: grid_y as i32,
+                z: 0,
+            };
 
             // now we go through all the entities with name to see which one is the nearest
             // some variables placeholders to save the entity name and its health
@@ -117,9 +123,11 @@ fn update_tooltip(
             // obtain also player fov
             let player_fov = player_fov_q.single();
 
-            q_names.iter()
-                .filter(|(_, pos, _)| 
-                    **pos == grid_position && player_fov.visible_tiles.contains( &((**pos).into()) ) )
+            q_names
+                .iter()
+                .filter(|(_, pos, _)| {
+                    **pos == grid_position && player_fov.visible_tiles.contains(&((**pos).into()))
+                })
                 .for_each(|(name, _, health)| {
                     s = name.0.clone();
                     good_click = true;
@@ -143,13 +151,12 @@ fn update_tooltip(
             // update box position
             for (mut boxnode, mut visible) in text_box_query.p1().iter_mut() {
                 if good_click {
-                    boxnode.left = Val::Px(pos.x-100.0);
-                    boxnode.top = Val::Px(pos.y-40.0);
+                    boxnode.left = Val::Px(pos.x - 100.0);
+                    boxnode.top = Val::Px(pos.y - 40.0);
                     *visible = Visibility::Visible;
                 } else {
                     *visible = Visibility::Hidden;
                 }
-                
             }
         }
     }
@@ -158,10 +165,11 @@ fn update_tooltip(
 pub struct TooltipsPlugin;
 impl Plugin for TooltipsPlugin {
     fn build(&self, app: &mut App) {
-        app
-
-        .add_systems(OnExit(TurnState::StartScreen), tooltip_ui)
-        .add_systems(Update, update_tooltip.run_if(in_state(TurnState::AwaitingInput)))        
-        .add_systems(OnExit(TurnState::AwaitingInput), hide_tooltip);
+        app.add_systems(OnExit(TurnState::StartScreen), tooltip_ui)
+            .add_systems(
+                Update,
+                update_tooltip.run_if(in_state(TurnState::AwaitingInput)),
+            )
+            .add_systems(OnExit(TurnState::AwaitingInput), hide_tooltip);
     }
 }

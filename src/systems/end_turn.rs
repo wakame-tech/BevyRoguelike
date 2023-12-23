@@ -5,9 +5,8 @@ pub fn end_turn(
     mut next_state: ResMut<NextState<TurnState>>,
     player_hp_q: Query<(&Health, &Position), With<Player>>,
     amulet_q: Query<&Position, With<AmuletOfYala>>,
-    exit_q: Query<&Position, With<ExitTile>>
+    exit_q: Query<&Position, With<ExitTile>>,
 ) {
-
     let (player_hp, player_pos) = player_hp_q.single();
     //let current_state: TurnState = *turn_state.get().clone();
     let current_state: TurnState = turn_state.clone();
@@ -27,7 +26,7 @@ pub fn end_turn(
         TurnState::MonsterTurn => TurnState::AwaitingInput,
         TurnState::StartScreen => return,
         TurnState::NextLevel => TurnState::AwaitingInput,
-        _ => current_state
+        _ => current_state,
     };
 
     if player_hp.current < 1 {

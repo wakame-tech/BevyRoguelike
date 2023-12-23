@@ -15,27 +15,17 @@ pub fn chasing(
 
     // create dijkstra map around player
     let search_targets = vec![player_idx];
-    let dijkstra_map = DijkstraMap::new(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        &search_targets,
-        map,
-        1024.0
-    );
+    let dijkstra_map = DijkstraMap::new(SCREEN_WIDTH, SCREEN_HEIGHT, &search_targets, map, 1024.0);
 
-    movers.iter().for_each(| (entity, pos, fov) | {
+    movers.iter().for_each(|(entity, pos, fov)| {
         // if monster cannot see player, then just return and do nothing
-        if !fov.visible_tiles.contains( &((*player_pos).into()) ) {
+        if !fov.visible_tiles.contains(&((*player_pos).into())) {
             return;
         }
 
         let idx = map_idx(pos.x, pos.y);
-        if let Some(destination) = DijkstraMap::find_lowest_exit(
-            &dijkstra_map, idx, &mb.map
-        )
-        {
-            let distance = DistanceAlg::Pythagoras.distance2d(
-                (*pos).into(), (*player_pos).into());
+        if let Some(destination) = DijkstraMap::find_lowest_exit(&dijkstra_map, idx, &mb.map) {
+            let distance = DistanceAlg::Pythagoras.distance2d((*pos).into(), (*player_pos).into());
             let destination: Position = if distance > 1.2 {
                 Position::from((map.index_to_point2d(destination), pos.z))
             } else {
@@ -48,18 +38,23 @@ pub fn chasing(
                 .filter(|(_, target_pos)| **target_pos == destination.into())
                 .for_each(|(victim, _)| {
                     // if the victim is the player
-                    if let Ok( (player_victim, _) ) = player.get(victim) {
+                    if let Ok((player_victim, _)) = player.get(victim) {
                         // send an attack message
-                        commands.spawn(WantsToAttack{attacker: entity, victim: player_victim});
+                        commands.spawn(WantsToAttack {
+                            attacker: entity,
+                            victim: player_victim,
+                        });
                     }
                     attacked = true;
                 });
 
-                if !attacked {
-                    // move to new position         
-                    commands.spawn(WantsToMove{entity, destination: destination.into()});
-                }
+            if !attacked {
+                // move to new position
+                commands.spawn(WantsToMove {
+                    entity,
+                    destination: destination.into(),
+                });
+            }
         }
     });
-
 }

@@ -1,20 +1,18 @@
-use crate::prelude::*;
 use super::MapArchitect;
+use crate::prelude::*;
 
 pub struct RoomsArchitect {}
 
 impl MapArchitect for RoomsArchitect {
-    fn new(&mut self) -> MapBuilder
-    {
-        let mut mb = MapBuilder
-        {
-            map : Map::new(),
+    fn new(&mut self) -> MapBuilder {
+        let mut mb = MapBuilder {
+            map: Map::new(),
             rooms: Vec::new(),
             walls: Vec::new(),
-            player_start : Position::new(0, 0, 0),
-            enemies_start : Vec::new(),
-            amulet_start : Position::new(0, 0, 0),
-            theme: super::themes::DungeonTheme::new()
+            player_start: Position::new(0, 0, 0),
+            enemies_start: Vec::new(),
+            amulet_start: Position::new(0, 0, 0),
+            theme: super::themes::DungeonTheme::new(),
         };
 
         mb.fill(TileType::Void);
@@ -29,4 +27,3 @@ impl MapArchitect for RoomsArchitect {
         mb
     }
 }
-

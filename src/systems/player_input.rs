@@ -10,9 +10,8 @@ pub fn player_input(
     items: Query<(Entity, &Position, &Naming), With<Item>>,
     mut next_state: ResMut<NextState<TurnState>>,
     mut popup_state: ResMut<NextState<PopUpState>>,
-    mut exit: EventWriter<AppExit>
+    mut exit: EventWriter<AppExit>,
 ) {
-
     let (player_ent, pos) = player_position.single();
     let mut action = true;
     let mut wait = false;
@@ -22,7 +21,6 @@ pub fn player_input(
     let key = keyboard_input.get_pressed().next().cloned();
 
     if let Some(key) = key {
-
         // print!("{:?}", key);
 
         match key {
@@ -32,16 +30,18 @@ pub fn player_input(
             KeyCode::Up => new_position.y += 1,
             KeyCode::G => {
                 // Grab item at this position
-                items.iter()
+                items
+                    .iter()
                     .filter(|(_, item_pos, _)| **item_pos == *pos)
                     .for_each(|(item_ent, _, name)| {
                         // remove render info and add carried component
-                        commands.entity(item_ent).remove::<SpriteSheetBundle>()
+                        commands
+                            .entity(item_ent)
+                            .remove::<SpriteSheetBundle>()
                             .insert(Carried(player_ent));
                         let message = format!("{} grabbed.\n", name.0);
                         game_log.add_entry(message);
-                    }
-                );
+                    });
             }
             KeyCode::I => {
                 popup_state.set(PopUpState::InventoryPopup);
@@ -59,27 +59,32 @@ pub fn player_input(
             _ => wait = true,
         }
 
-        // move to new position   
+        // move to new position
         if new_position != *pos {
             // placeholder to know if it just a move or an attack
             let mut hit_something = false;
             // check if there is an enemy at the destination position
-            enemies.iter()
-                .filter(|(_, pos)| {
-                    **pos == new_position
-                })
+            enemies
+                .iter()
+                .filter(|(_, pos)| **pos == new_position)
                 // if there's an enemy, say you hit something and send a WantsToAttack
-                .for_each(|(victim, _) | {
+                .for_each(|(victim, _)| {
                     hit_something = true;
 
-                    commands.spawn(WantsToAttack{attacker: player_ent, victim });
+                    commands.spawn(WantsToAttack {
+                        attacker: player_ent,
+                        victim,
+                    });
                 });
 
             // if it did not hit then it is just a movement
             if !hit_something {
-                commands.spawn(WantsToMove{entity: player_ent, destination: new_position});
-            } 
-        } 
+                commands.spawn(WantsToMove {
+                    entity: player_ent,
+                    destination: new_position,
+                });
+            }
+        }
         // else means the user clicked an action which did not move the player.
         else if wait {
             game_log.add_entry("Player waits.\n".to_string());
@@ -91,7 +96,6 @@ pub fn player_input(
         }
 
         keyboard_input.reset_all();
-
     }
 }
 
@@ -124,15 +128,11 @@ pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
         app
-
-        // listening to user input on inventory screen
-        .add_systems(
-            Update,
-            (
-                player_input,
-                equip_first_weapon,
-                equip_weapon_log)
-                .run_if(in_state(TurnState::AwaitingInput))
+            // listening to user input on inventory screen
+            .add_systems(
+                Update,
+                (player_input, equip_first_weapon, equip_weapon_log)
+                    .run_if(in_state(TurnState::AwaitingInput)),
             );
     }
 }

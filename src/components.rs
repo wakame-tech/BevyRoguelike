@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 #[derive(Component)]
 pub struct Player {
-    pub map_level: u32
+    pub map_level: u32,
 }
 
 #[derive(Component)]
@@ -50,14 +50,14 @@ pub struct ExitTile;
 pub struct FieldOfView {
     pub visible_tiles: HashSet<Point>,
     pub radius: i32,
-    pub is_dirty:bool
+    pub is_dirty: bool,
 }
 impl FieldOfView {
     pub fn new(radius: i32) -> Self {
-        Self{
+        Self {
             visible_tiles: HashSet::new(),
             radius,
-            is_dirty: true
+            is_dirty: true,
         }
     }
 }
@@ -70,19 +70,19 @@ pub struct ChasingPlayer;
 #[derive(Component, Clone, Copy)]
 pub struct WantsToMove {
     pub entity: Entity,
-    pub destination: Position
+    pub destination: Position,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct WantsToAttack {
     pub attacker: Entity,
-    pub victim: Entity
+    pub victim: Entity,
 }
 
 #[derive(Component)]
 pub struct Health {
     pub current: i32,
-    pub max: i32
+    pub max: i32,
 }
 
 #[derive(Component)]
@@ -99,7 +99,7 @@ pub struct Carried(pub Entity);
 #[derive(Component)]
 pub struct ActivateItem {
     pub used_by: Entity,
-    pub item: Entity
+    pub item: Entity,
 }
 
 #[derive(Component)]

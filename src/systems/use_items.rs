@@ -10,17 +10,13 @@ pub fn use_items(
     mut maptiles_query: Query<(Entity, &mut Visibility), With<MapTile>>,
     names_query: Query<&Naming>,
 ) {
-
     // for every message
-    for (message_entity, activated_item) in item_messages.iter() 
-    {
+    for (message_entity, activated_item) in item_messages.iter() {
         // if it is a healing item
-        if let Ok((_, healing)) = healing_query.get(activated_item.item) 
-        {
-            if let Ok((_, mut health)) = health_target_query.get_mut(activated_item.used_by) 
-            {
+        if let Ok((_, healing)) = healing_query.get(activated_item.item) {
+            if let Ok((_, mut health)) = health_target_query.get_mut(activated_item.used_by) {
                 // increase health
-                health.current = i32::min( health.max, health.current+healing.amount);
+                health.current = i32::min(health.max, health.current + healing.amount);
                 // update gamelog
                 let target_char = names_query.get(activated_item.used_by).unwrap();
                 let message = format!("{} heals {} HP.\n", target_char.0, healing.amount);
@@ -31,7 +27,9 @@ pub fn use_items(
         // if it is a map item
         if let Ok(_) = mapping_query.get(activated_item.item) {
             // reveal all tiles
-            maptiles_query.iter_mut().for_each(|(_, mut vis)| *vis = Visibility::Visible);
+            maptiles_query
+                .iter_mut()
+                .for_each(|(_, mut vis)| *vis = Visibility::Visible);
             // update gamelog
             let message = format!("Map revealed.\n");
             gamelog.add_entry(message);
@@ -42,5 +40,4 @@ pub fn use_items(
         // remove the item
         commands.entity(activated_item.item).despawn_recursive();
     }
-
 }

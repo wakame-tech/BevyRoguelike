@@ -25,26 +25,26 @@ impl Map {
         }
     }
 
-    pub fn in_bounds<T: Into<Position>> (&self, position: T) -> bool {
+    pub fn in_bounds<T: Into<Position>>(&self, position: T) -> bool {
         let position = position.into();
-        position.x >= 0 && position.x < SCREEN_WIDTH
-            && position.y >= 0 && position.y < SCREEN_HEIGHT
+        position.x >= 0
+            && position.x < SCREEN_WIDTH
+            && position.y >= 0
+            && position.y < SCREEN_HEIGHT
     }
 
     // checks if it is physically possible (ie no wall or physical object)
-    pub fn can_enter_tile<T: Into<Position>> (&self, position: T) -> bool {
+    pub fn can_enter_tile<T: Into<Position>>(&self, position: T) -> bool {
         let position = position.into();
-        self.in_bounds(position) && (
-            self.tiles[map_idx(position.x, position.y)] == TileType::Floor ||
-            self.tiles[map_idx(position.x, position.y)] == TileType::Exit
-        )
+        self.in_bounds(position)
+            && (self.tiles[map_idx(position.x, position.y)] == TileType::Floor
+                || self.tiles[map_idx(position.x, position.y)] == TileType::Exit)
     }
 
     // checks if another entity like an enemy or player, are already in that cell
-    pub fn is_tile_occupied<T: Into<Position>> (&self, position: T) -> bool {
+    pub fn is_tile_occupied<T: Into<Position>>(&self, position: T) -> bool {
         let position = position.into();
-        self.in_bounds(position)
-            && self.occupation[map_idx(position.x, position.y)] == None
+        self.in_bounds(position) && self.occupation[map_idx(position.x, position.y)] == None
     }
 
     pub fn try_idx(&self, position: Position) -> Option<usize> {
@@ -80,8 +80,7 @@ impl Algorithm2D for Map {
 }
 
 impl BaseMap for Map {
-    fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> 
-    {
+    fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> {
         let mut exits = SmallVec::new();
         let location = self.index_to_point2d(idx);
 
@@ -101,9 +100,7 @@ impl BaseMap for Map {
     }
 
     fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
-        DistanceAlg::Pythagoras.distance2d(
-            self.index_to_point2d(idx1), self.index_to_point2d(idx2)
-        )
+        DistanceAlg::Pythagoras.distance2d(self.index_to_point2d(idx1), self.index_to_point2d(idx2))
     }
 
     fn is_opaque(&self, idx: usize) -> bool {
@@ -112,68 +109,60 @@ impl BaseMap for Map {
 }
 
 pub fn map_idx(x: i32, y: i32) -> usize {
-    ((y*SCREEN_WIDTH) + x) as usize
+    ((y * SCREEN_WIDTH) + x) as usize
 }
 
-pub fn spawn_map_tiles(
-    mut commands: Commands,
-    mb: Res<MapBuilder>,
-    atlas: Res<CharsetAsset>,
-) {
+pub fn spawn_map_tiles(mut commands: Commands, mb: Res<MapBuilder>, atlas: Res<CharsetAsset>) {
     for y in 0..SCREEN_HEIGHT {
         for x in 0..SCREEN_WIDTH {
             let idx = map_idx(x, y);
-            let glyph = mb.theme.tile_to_render(mb.map.tiles[idx]);                
+            let glyph = mb.theme.tile_to_render(mb.map.tiles[idx]);
 
             if let Some(glyph) = glyph {
-                match mb.map.tiles[idx] 
-                {
-                    TileType::Floor => 
-                    {
+                match mb.map.tiles[idx] {
+                    TileType::Floor => {
                         commands
-                        .spawn(SpriteBundle {
-                            sprite: Sprite {
-                                color: glyph.color,
-                                custom_size: Some(Vec2::new(1.0, 1.0)),
-                                ..Default::default()
-                            },
-                            visibility: Visibility::Hidden,
-                            ..Default::default()
-                        })
-                        .insert(MapTile)
-                        .insert(Position { x: x, y: y, z: 1 })
-                        .insert(TileSize::square(1.0));
-                    }
-                    
-                    tile_type @ (TileType::Wall | TileType::Exit) =>
-                    {
-                        // if exit, add entity with exit component, so it's easy to find later
-                        if tile_type == TileType::Exit {
-                            commands.spawn((Position { x, y, z: 1 }, ExitTile));
-                        }
-                        if let Some(bkg_color) = glyph.bkg_color {
-                            commands
-                            .spawn((
-                                MapTile,
-                                TileSize::square(1.0),
-                                Position { x, y, z: 0 },
-                                SpriteBundle {
+                            .spawn(SpriteBundle {
                                 sprite: Sprite {
-                                    color: bkg_color,
+                                    color: glyph.color,
                                     custom_size: Some(Vec2::new(1.0, 1.0)),
                                     ..Default::default()
                                 },
                                 visibility: Visibility::Hidden,
                                 ..Default::default()
-                            }));
-                        }
+                            })
+                            .insert(MapTile)
+                            .insert(Position { x: x, y: y, z: 1 })
+                            .insert(TileSize::square(1.0));
+                    }
 
-                        commands
-                            .spawn((
+                    tile_type @ (TileType::Wall | TileType::Exit) => {
+                        // if exit, add entity with exit component, so it's easy to find later
+                        if tile_type == TileType::Exit {
+                            commands.spawn((Position { x, y, z: 1 }, ExitTile));
+                        }
+                        if let Some(bkg_color) = glyph.bkg_color {
+                            commands.spawn((
                                 MapTile,
                                 TileSize::square(1.0),
-                                Position { x, y, z: 1 },
-                                SpriteSheetBundle {
+                                Position { x, y, z: 0 },
+                                SpriteBundle {
+                                    sprite: Sprite {
+                                        color: bkg_color,
+                                        custom_size: Some(Vec2::new(1.0, 1.0)),
+                                        ..Default::default()
+                                    },
+                                    visibility: Visibility::Hidden,
+                                    ..Default::default()
+                                },
+                            ));
+                        }
+
+                        commands.spawn((
+                            MapTile,
+                            TileSize::square(1.0),
+                            Position { x, y, z: 1 },
+                            SpriteSheetBundle {
                                 texture_atlas: atlas.atlas.clone(),
                                 sprite: TextureAtlasSprite {
                                     color: glyph.color,
@@ -183,9 +172,10 @@ pub fn spawn_map_tiles(
                                 },
                                 visibility: Visibility::Hidden,
                                 ..Default::default()
-                            }));
+                            },
+                        ));
                     }
-                    TileType::Void => ()
+                    TileType::Void => (),
                 }
             }
         }
